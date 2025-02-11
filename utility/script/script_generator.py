@@ -44,18 +44,24 @@ def generate_script(topic):
 
     response = client.chat.completions.create(
             model=model,
-            messages=[
+            messages=[ 
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": topic}
             ]
         )
     content = response.choices[0].message.content
+
+    # Imprimir el contenido para depuración
+    print("Content received:", content)
+
+    # Limpiar el contenido antes de intentar cargarlo
+    content = content.replace('\n', ' ').replace('\r', '').strip()
+
     try:
         script = json.loads(content)["script"]
-    except Exception as e:
-        json_start_index = content.find('{')
-        json_end_index = content.rfind('}')
-        print(content)
-        content = content[json_start_index:json_end_index+1]
-        script = json.loads(content)["script"]
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        print("Content causing error:", content)
+        raise  # Vuelve a lanzar la excepción después de imprimir el error
+
     return script
